@@ -8,7 +8,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 BOT_TOKEN = "8723304184:AAH0j1kr7xq9TGA2X4cAvhNJgjnb7ANeeoQ"
 
 # आपकी रेंडर ऐप का नाम (Render पर सर्विस बनाते समय जो नाम रखेंगे)
-YOUR_RENDER_APP_NAME = "jorofile2link" 
+YOUR_RENDER_APP_NAME = "file2linklite" 
 
 # रेंडर का फाइनल URL जो सीधे क्रोम को ट्रिगर करेगा
 BASE_URL = f"https://{YOUR_RENDER_APP_NAME}.onrender.com"
