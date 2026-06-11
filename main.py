@@ -4,10 +4,10 @@ from flask import Flask, redirect, request
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# 🤖 आपका नया बॉट टोकन यहाँ सेट है
+# 🤖 Aapka bot token
 BOT_TOKEN = "8947006366:AAGN5tgbkAnElu0oi-aB2pWveYcpYzRR6v0"
 
-# 📢 आपके चैनल का यूजरनेम
+# 📢 Aapke channel ka username aur link
 CHANNEL_USERNAME = "@jorogamer"
 CHANNEL_URL = "https://t.me/jorogamer"
 
@@ -18,7 +18,7 @@ BASE_URL = f"https://{YOUR_RENDER_APP_NAME}.onrender.com"
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# 🔒 यूजर ने चैनल जॉइन किया है या नहीं, यह चेक करने का फंक्शन
+# 🔒 Force Join Check Function
 def check_must_join(user_id):
     try:
         member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
@@ -26,10 +26,9 @@ def check_must_join(user_id):
             return True
         return False
     except Exception:
-        # अगर कोई एरर आए (जैसे बॉट एडमिन न हो), तो बैकअप के लिए True कर देगा ताकि बॉट रुके नहीं
         return True
 
-# 📢 जॉइन न करने पर दिखने वाला मैसेज और बटन
+# 📢 Join Request Message
 def send_join_request(chat_id):
     join_text = (
         "🚀 *To use this bot, you must join our channel!*\n\n"
@@ -49,7 +48,7 @@ def getMessage():
     bot.process_new_updates([update])
     return "!", 200
 
-# 🏠 होम रूट
+# 🏠 Home Route
 @app.route('/')
 def home():
     return "⚡ Premium File-to-Link Bot Is Running Alive ⚡", 200
@@ -65,7 +64,6 @@ def download_file(file_path):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    # फ़ोर्स जॉइन चेक
     if not check_must_join(message.from_user.id):
         send_join_request(message.chat.id)
         return
@@ -74,7 +72,7 @@ def send_welcome(message):
     welcome_text = (
         f"👋 *Welcome, {user_name}!*\n\n"
         "✨ *PREMIUM FILE TO LINK CONVERTER*\n"
-        "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+        "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
         "⚡ *Features:*\n"
         "├ 📂 Instant File to Link Conversion\n"
         "├ 🚀 High-Speed Chrome Download Link\n"
@@ -86,13 +84,12 @@ def send_welcome(message):
     markup = InlineKeyboardMarkup()
     markup.row(
         InlineKeyboardButton("📢 Channel", url=CHANNEL_URL),
-        InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/your_username") # यहाँ अपना यूजरनेम बदल सकते हैं
+        InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/Joro_Gamer") # ✅ Yahan aapka sahi link set kar diya hai
     )
     bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
 
 @bot.message_handler(content_types=['document', 'video', 'audio', 'photo', 'voice'])
 def handle_docs(message):
-    # फ़ोर्स जॉइन चेक
     if not check_must_join(message.from_user.id):
         send_join_request(message.chat.id)
         return
@@ -132,11 +129,11 @@ def handle_docs(message):
         
         success_text = (
             "✅ *File Successfully Converted!*\n"
-            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
             f"📄 *File Name:* `{file_name}`\n"
             "🌐 *Platform:* Google Chrome Supported\n"
             "🌟 *Status:* Premium Link Generated\n"
-            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
+            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n"
             "👇 *Neeche diye button par click karke download karein:* "
         )
         
