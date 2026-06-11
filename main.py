@@ -1,27 +1,34 @@
 import os
 import threading
-from flask import Flask, redirect
+from flask import Flask, redirect, request
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # टेलीग्राम बॉट टोकन
 BOT_TOKEN = "8723304184:AAH0j1kr7xq9TGA2X4cAvhNJgjnb7ANeeoQ"
 
-# आपकी रेंडर ऐप का नाम (Render पर सर्विस बनाते समय जो नाम रखेंगे)
+# आपकी Render ऐप का नाम
 YOUR_RENDER_APP_NAME = "file2linklite" 
 
-# रेंडर का फाइनल URL जो सीधे क्रोम को ट्रिगर करेगा
+# रेंडर का फाइनल URL
 BASE_URL = f"https://{YOUR_RENDER_APP_NAME}.onrender.com"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# Render.com के लिए होम रूट (Health Check)
+# 🌐 Render से आने वाले टेलीग्राम मैसेजेस को रिसीव करने का रास्ता (Webhook Route)
+@app.route(f'/{BOT_TOKEN}', methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+# 🏠 होम रूट (Health Check)
 @app.route('/')
 def home():
     return "⚡ Premium File-to-Link Bot Is Running Alive ⚡", 200
 
-# 🌐 CHROME DOWNLOAD REDIRECTOR (FIXED)
+# 🌐 CHROME DOWNLOAD REDIRECTOR
 @app.route('/download/<path:file_path>')
 def download_file(file_path):
     telegram_direct_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
@@ -45,10 +52,10 @@ def send_welcome(message):
         "Aap koi bhi File, Document, APK, Video, ya Audio is chat me send karein. Bot turant usko Chrome download link me badal dega!"
     )
     
-    markup = InlineKeyboardMarkup()
+    markup = telebot.types.InlineKeyboardMarkup()
     markup.row(
-        InlineKeyboardButton("📢 Channel", url="https://t.me/your_channel"),
-        InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/your_username")
+        telebot.types.InlineKeyboardButton("📢 Channel", url="https://t.me/your_channel"),
+        telebot.types.InlineKeyboardButton("👨‍💻 Developer", url="https://t.me/your_username")
     )
     
     bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown", reply_markup=markup)
@@ -78,10 +85,9 @@ def handle_docs(message):
             file_id = message.document.file_id
             file_name = message.document.file_name or "file"
 
-        # टेलीग्राम सर्वर से फाइल पाथ निकालना
         file_info = bot.get_file(file_id)
         
-        # ?tgOpenInApp=0 से टेलीग्राम इन-ऐप ब्राउज़र बाईपास होगा और क्रोम खुलेगा
+        # क्रोम बाईपास लिंक
         chrome_download_link = f"{BASE_URL}/download/{file_info.file_path}?tgOpenInApp=0"
         
         bot.edit_message_text(
@@ -101,9 +107,9 @@ def handle_docs(message):
             "👇 *Neeche diye button par click karke download karein:* "
         )
         
-        download_markup = InlineKeyboardMarkup()
+        download_markup = telebot.types.InlineKeyboardMarkup()
         download_markup.row(
-            InlineKeyboardButton("🌐 Open in Chrome & Download", url=chrome_download_link)
+            telebot.types.InlineKeyboardButton("🌐 Open in Chrome & Download", url=chrome_download_link)
         )
         
         bot.delete_message(message.chat.id, processing_msg.message_id)
@@ -117,18 +123,25 @@ def handle_docs(message):
             parse_mode="Markdown"
         )
 
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-def run_bot():
-    print("🤖 Bot is polling...")
-    bot.infinity_polling(skip_meaningful=True)
+# 🛠️ AUTOMATIC WEBHOOK SETUP FUNCTION
+def set_webhook():
+    import time
+    time.sleep(2)  # Flask सर्वर को चालू होने के लिए 2 सेकंड का समय देना
+    bot.remove_webhook()
+    webhook_url = f"{BASE_URL}/{BOT_TOKEN}"
+    success = bot.set_webhook(url=webhook_url)
+    if success:
+        print(f"✅ Webhook Successfully Set to: {webhook_url}")
+    else:
+        print("❌ Webhook Setup Failed!")
 
 if __name__ == '__main__':
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
+    # वेबहुक सेट करने के लिए एक अलग बैकग्राउंड थ्रेड चलाना
+    webhook_thread = threading.Thread(target=set_webhook)
+    webhook_thread.daemon = True
+    webhook_thread.start()
     
-    run_bot()
-    
+    # Render के पोर्ट पर Flask सर्वर चलाना (यह मेन थ्रेड में रहेगा ताकि Render सर्विस बंद न हो)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+            
